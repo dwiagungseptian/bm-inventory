@@ -9,21 +9,15 @@ class Maintenance extends Model
 {
     use HasFactory;
     protected $fillable =[
-        'user_id',
-        'asset_id',
+        'asset_assignment_id',
         'keterangan',
         'status',
         'lampiran',
         'alasan_ditolak',
     ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function manage_asset()
-    {
-        return $this->belongsTo(ManageAsset::class);
-    }
+    public function assetAssignment()
+{
+    return $this->belongsTo(AssetAssignment::class);
+}
 }

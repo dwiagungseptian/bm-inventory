@@ -13,6 +13,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class AssetAssignmentResource extends Resource
 {
@@ -23,6 +24,7 @@ class AssetAssignmentResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
+
             ->schema([
                 Forms\Components\Select::make('user_id')
                     ->relationship('user', 'name')
@@ -52,6 +54,12 @@ class AssetAssignmentResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function (Builder $query) {
+                $is_super_admin = Auth()->user()->hasRole('super_admin');
+                if (!$is_super_admin) {
+                    $query->where('user_id', auth()->user()->id);
+                }
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Nama Pegawai'),
