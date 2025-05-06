@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Maintenance extends Model
 {
     use HasFactory;
-    protected $fillable =[
+    protected $fillable = [
         'asset_assignment_id',
         'keterangan',
         'status',
@@ -17,7 +17,7 @@ class Maintenance extends Model
     ];
 
     public function assetAssignment()
-{
-    return $this->belongsTo(AssetAssignment::class);
-}
+    {
+        return $this->belongsTo(\App\Models\AssetAssignment::class, 'asset_assignment_id');
+    }
 }

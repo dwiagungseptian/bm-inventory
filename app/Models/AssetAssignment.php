@@ -17,7 +17,7 @@ class AssetAssignment extends Model
         'status',
     ];
 
-    public function manage_asset()
+    public function manageAsset()
     {
         return $this->belongsTo(ManageAsset::class, 'assets_id');
     }

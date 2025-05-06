@@ -23,57 +23,81 @@ class MaintenanceResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('user_id')
-                    ->label('Nama Pengguna')
-                    ->relationship('user', 'name')
-                    ->required(),
-
-                Forms\Components\Select::make('assets_id')
-                    ->label('Nama Aset')
-                    ->relationship('manage_asset', 'nama_aset')
-                    ->required(),
-
+                Forms\Components\Select::make('asset_assignment_id')
+                    ->label('Aset yang Dipinjam')
+                    ->options(function () {
+                        return \App\Models\AssetAssignment::with(['manageAsset', 'user'])
+                            ->where('user_id', auth()->id())
+                            ->whereNull('returned_at')
+                            ->get()
+                            ->mapWithKeys(function ($assignment) {
+                                return [
+                                    $assignment->id => optional($assignment->manageAsset)->nama_aset . ' - ' . optional($assignment->user)->name,
+                                ];
+                            });
+                    })
+                    ->getOptionLabelUsing(function ($value): ?string {
+                        $assignment = \App\Models\AssetAssignment::with(['manageAsset', 'user'])->find($value);
+                        return $assignment
+                            ? optional($assignment->manageAsset)->nama_aset . ' - ' . optional($assignment->user)->name
+                            : null;
+                    })
+                    ->required()
+                    ->searchable(),
                 Forms\Components\Textarea::make('keterangan')
                     ->required()
                     ->maxLength(255),
-
                 Forms\Components\Select::make('status')
+                    ->label('Status')
                     ->options([
                         'Diajukan' => 'Diajukan',
                         'Approve' => 'Disetujui',
                         'Ditolak' => 'Ditolak',
                     ])
+                    ->default('Diajukan')
                     ->required()
-                    ->live(), // Penting agar perubahan langsung terdeteksi
+                    ->visible(fn() => auth()->user()->hasRole('Infrastruktur'))
+                    ->dehydrated(fn() => auth()->user()->hasRole('Infrastruktur'))
+                    ->live(),
+
 
                 Forms\Components\FileUpload::make('lampiran')
                     ->required(),
 
                 Forms\Components\Textarea::make('alasan_ditolak')
-                    ->label('Alasan Penolakan')
-                    ->visible(fn(Forms\Get $get) => $get('status') === 'Ditolak')
-                    ->requiredIf('status', 'Ditolak')
-                    ->columnSpanFull(),
+                    ->label('Alasan Ditolak')
+                    ->visible(fn(Forms\Get $get) => auth()->user()->hasRole('Infrastruktur') && $get('status') === 'Ditolak')
+                    ->requiredIf('status', 'Ditolak'),
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            // ->modifyQueryUsing(function (Builder $query) {
-            //     $is_super_admin = Auth()->user()->hasRole('super_admin');
-            //     if (!$is_super_admin) {
-            //         $query->where('user_id', auth()->user()->id);
-            //     }
-            // })
+            ->modifyQueryUsing(function (Builder $query) {
+                $is_super_admin = auth()->user()->hasAnyRole(['super_admin', 'Infrastruktur']);
+                if (! $is_super_admin) {
+                    $query->whereHas('assetAssignment', function ($q) {
+                        $q->where('user_id', auth()->id());
+                    });
+                }
+            })
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')
+                Tables\Columns\TextColumn::make('assetAssignment.user.name')
+                    ->label('Pegawai')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('manage_assets.name')
+                Tables\Columns\TextColumn::make('assetAssignment.manageAsset.nama_aset')
+                    ->label('Nama Aset')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('keterangan')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('status'),
+                Tables\Columns\TextColumn::make('status')
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'Diajukan' => 'warning',
+                        'Approve' => 'success',
+                        'Ditolak' => 'danger',
+                    }),
                 Tables\Columns\ImageColumn::make('lampiran')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
