@@ -55,7 +55,14 @@ class ManageAssetResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('keterangan')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('status'),
+                Tables\Columns\TextColumn::make('status')
+                ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'Tersedia' => 'success',
+                        'Rusak' => 'dangers',
+                        'Dalam Perbaikan' => 'warning',
+                        'Dipakai' => 'info',
+                    }),
                 Tables\Columns\ImageColumn::make('gambar')
                      ->disk('public')
                     ->square(),

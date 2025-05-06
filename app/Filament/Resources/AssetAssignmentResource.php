@@ -31,7 +31,7 @@ class AssetAssignmentResource extends Resource
                     ->required(),
                 Forms\Components\Select::make('assets_id')
                     ->required()
-                    ->relationship('manage_asset', 'nama_aset')
+                    ->relationship('manageAsset', 'nama_aset')
                     ->options(
                         ManageAsset::whereNotIn('status', ['Dipakai', 'Rusak', 'Maintenance'])
                             ->pluck('nama_aset', 'id')
@@ -55,7 +55,7 @@ class AssetAssignmentResource extends Resource
     {
         return $table
             ->modifyQueryUsing(function (Builder $query) {
-                $is_super_admin = Auth()->user()->hasRole('super_admin');
+                $is_super_admin = Auth()->user()->hasAnyRole('super_admin','Infrastruktur');
                 if (!$is_super_admin) {
                     $query->where('user_id', auth()->user()->id);
                 }
@@ -63,7 +63,7 @@ class AssetAssignmentResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Nama Pegawai'),
-                Tables\Columns\TextColumn::make('manage_asset.nama_aset')
+                Tables\Columns\TextColumn::make('manageAsset.nama_aset')
                     ->label('Nama Aset'),
                 Tables\Columns\TextColumn::make('assigned_at')
                     ->date()
