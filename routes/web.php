@@ -1,6 +1,8 @@
 <?php
 
+use App\Exports\PegawaiExport;
 use Illuminate\Support\Facades\Route;
+use Maatwebsite\Excel\Facades\Excel;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,3 +22,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return redirect()->route('filament.admin.auth.login');
 });
+
+Route::get('pegawai/export', function () {
+    return Excel::download(new PegawaiExport, 'pegawai.xlsx');
+})->name('pegawai-export');

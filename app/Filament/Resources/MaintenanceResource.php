@@ -17,7 +17,17 @@ class MaintenanceResource extends Resource
 {
     protected static ?string $model = Maintenance::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-cog';
+    public static function getNavigationBadge(): ?string
+    {
+        if (auth()->check() && auth()->user()->hasAnyRole('Infrastruktur', 'super_admin')) {
+            return static::getModel()::count();
+        }
+
+        return null;
+    }
+    protected static ?int $navigationSort = 4;
+    protected static ?string $navigationGroup = 'Pengelolaan Aset';
 
     public static function form(Form $form): Form
     {

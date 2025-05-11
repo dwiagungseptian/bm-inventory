@@ -17,7 +17,13 @@ class ManageAssetResource extends Resource
 {
     protected static ?string $model = ManageAsset::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-m-circle-stack';
+    protected static ?string $navigationGroup = 'Pengelolaan Aset';
+    protected static ?int $navigationSort = 2;
+    public static function getNavigationLabel(): string
+    {
+        return 'Manajemen Aset';
+    }
 
     public static function form(Form $form): Form
     {
@@ -56,7 +62,7 @@ class ManageAssetResource extends Resource
                 Tables\Columns\TextColumn::make('keterangan')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('status')
-                ->badge()
+                    ->badge()
                     ->color(fn(string $state): string => match ($state) {
                         'Tersedia' => 'success',
                         'Rusak' => 'dangers',
@@ -64,7 +70,7 @@ class ManageAssetResource extends Resource
                         'Dipakai' => 'info',
                     }),
                 Tables\Columns\ImageColumn::make('gambar')
-                     ->disk('public')
+                    ->disk('public')
                     ->square(),
                 Tables\Columns\TextColumn::make('tanggal_pembelian'),
                 Tables\Columns\TextColumn::make('created_at')
