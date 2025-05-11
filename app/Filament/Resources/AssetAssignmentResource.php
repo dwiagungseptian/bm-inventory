@@ -19,7 +19,9 @@ class AssetAssignmentResource extends Resource
 {
     protected static ?string $model = AssetAssignment::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document';
+    protected static ?int $navigationSort = 3;
+    protected static ?string $navigationGroup = 'Pengelolaan Aset';
 
     public static function form(Form $form): Form
     {
@@ -55,7 +57,7 @@ class AssetAssignmentResource extends Resource
     {
         return $table
             ->modifyQueryUsing(function (Builder $query) {
-                $is_super_admin = Auth()->user()->hasAnyRole('super_admin','Infrastruktur');
+                $is_super_admin = Auth()->user()->hasAnyRole('super_admin', 'Infrastruktur');
                 if (!$is_super_admin) {
                     $query->where('user_id', auth()->user()->id);
                 }

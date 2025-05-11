@@ -17,7 +17,13 @@ class DivisionResource extends Resource
 {
     protected static ?string $model = Division::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-star';
+    public static function getNavigationLabel(): string
+    {
+        return 'Direktorat';
+    }
+    protected static ?int $navigationSort = 5;
+    protected static ?string $navigationGroup = 'Pengelolaan Pegawai';
 
     public static function form(Form $form): Form
     {

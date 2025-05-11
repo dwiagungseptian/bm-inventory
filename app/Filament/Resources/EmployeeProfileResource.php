@@ -17,8 +17,14 @@ class EmployeeProfileResource extends Resource
 {
     protected static ?string $model = EmployeeProfile::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-s-user-group';
 
+    public static function getNavigationLabel(): string
+    {
+        return 'Data Pegawai';
+    }
+    protected static ?int $navigationSort = 7;
+    protected static ?string $navigationGroup = 'Pengelolaan Pegawai';
     public static function form(Form $form): Form
     {
         return $form
