@@ -6,6 +6,7 @@ use App\Filament\Resources\EmployeeProfileResource;
 use Filament\Actions;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Support\Facades\Auth;
 
 class ListEmployeeProfiles extends ListRecords
 {
@@ -13,11 +14,16 @@ class ListEmployeeProfiles extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [
-            Action::make('Export Excel')
-                ->url(route('pegawai-export'))
-                ->color('danger'),
+        $actions = [
             Actions\CreateAction::make(),
         ];
+    
+        if (Auth::user()->hasAnyRole('Infrastruktur', 'super_admin')) {
+            $actions[] = Action::make('Export Excel')
+                ->url(route('pegawai-export'))
+                ->color('danger');
+        }
+    
+        return $actions;
     }
 }

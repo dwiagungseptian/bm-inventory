@@ -29,25 +29,41 @@ class ManageAssetResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('nama_aset')
-                    ->required(),
-                Forms\Components\TextInput::make('kode_aset')
-                    ->required(),
-                Forms\Components\TextArea::make('keterangan')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\Select::make('status')
-                    ->options([
-                        'Tersedia' => 'Tersedia',
-                        'Rusak' => 'Rusak',
-                        'Dalam Perbaikan' => 'Dalam Perbaikan',
-                        'Dipakai' => 'Dipakai',
+                Forms\Components\Group::make()
+                    ->schema([
+                        Forms\Components\Section::make()
+                            ->schema([
+                                Forms\Components\TextInput::make('nama_aset')
+                                    ->required(),
+                                Forms\Components\TextInput::make('kode_aset')
+                                    ->required(),
+                                Forms\Components\Select::make('status')
+                                    ->options([
+                                        'Tersedia' => 'Tersedia',
+                                        'Rusak' => 'Rusak',
+                                        'Dalam Perbaikan' => 'Dalam Perbaikan',
+                                        'Dipakai' => 'Dipakai',
+                                    ])
+                                    ->required(),
+
+                            ]),
+                    ]),
+                Forms\Components\Group::make()
+                    ->schema([
+
+                        Forms\Components\Section::make()
+                            ->schema([
+                                Forms\Components\TextArea::make('keterangan')
+                                    ->required()
+                                    ->maxLength(255),
+                                Forms\Components\FileUpload::make('gambar')
+                                    ->required(),
+                                Forms\Components\DatePicker::make('tanggal_pembelian')
+                                    ->required(),
+                            ])
                     ])
-                    ->required(),
-                Forms\Components\FileUpload::make('gambar')
-                    ->required(),
-                Forms\Components\DatePicker::make('tanggal_pembelian')
-                    ->required(),
+
+
             ]);
     }
 

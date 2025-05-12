@@ -29,24 +29,37 @@ class EmployeeProfileResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'name')
-                    ->label('Nama Pegawai')
-                    ->required(),
-                Forms\Components\Select::make('position_id')
-                    ->relationship('position', 'nama_jabatan')
-                    ->label('Jabatan')
-                    ->required(),
-                Forms\Components\Select::make('division_id')
-                    ->relationship('division', 'nama_divisi')
-                    ->label('Divisi')
-                    ->required(),
-                Forms\Components\TextInput::make('no_hp')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('alamat')
-                    ->required()
-                    ->maxLength(255),
+                Forms\Components\Group::make()
+                    ->schema([
+                        Forms\Components\Section::make()
+                            ->schema([
+                                Forms\Components\Select::make('user_id')
+                                    ->relationship('user', 'name')
+                                    ->label('Nama Pegawai')
+                                    ->required(),
+                                Forms\Components\TextInput::make('no_hp')
+                                    ->required()
+                                    ->maxLength(255),
+                                Forms\Components\TextArea::make('alamat')
+                                    ->required()
+                                    ->maxLength(255),
+                            ]),
+                    ]),
+                Forms\Components\Group::make()
+                    ->schema([
+                        Forms\Components\Section::make()
+                            ->schema([
+                                Forms\Components\Select::make('position_id')
+                                    ->relationship('position', 'nama_jabatan')
+                                    ->label('Jabatan')
+                                    ->required(),
+                                Forms\Components\Select::make('division_id')
+                                    ->relationship('division', 'nama_divisi')
+                                    ->label('Divisi')
+                                    ->required(),
+
+                            ])
+                    ])
             ]);
     }
 

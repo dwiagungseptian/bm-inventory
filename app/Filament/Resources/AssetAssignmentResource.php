@@ -26,30 +26,44 @@ class AssetAssignmentResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-
             ->schema([
-                Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'name')
-                    ->required(),
-                Forms\Components\Select::make('assets_id')
-                    ->required()
-                    ->relationship('manageAsset', 'nama_aset')
-                    ->options(
-                        ManageAsset::whereNotIn('status', ['Dipakai', 'Rusak', 'Maintenance'])
-                            ->pluck('nama_aset', 'id')
-                            ->toArray()
-                    ),
-                Forms\Components\DatePicker::make('assigned_at')
-                    ->required(),
-                Forms\Components\DatePicker::make('returned_at'),
-                Forms\Components\Textarea::make('keterangan')
-                    ->columnSpanFull(),
-                Forms\Components\Select::make('status')
-                    ->options([
-                        'Dipakai' => 'Dipakai',
-                        'Dikembalikan' => 'Dikembalikan',
+                Forms\Components\Group::make()
+                    ->schema([
+                        Forms\Components\Section::make()
+                            ->schema([
+                                Forms\Components\Select::make('user_id')
+                                    ->relationship('user', 'name')
+                                    ->required(),
+                                Forms\Components\Select::make('assets_id')
+                                    ->required()
+                                    ->relationship('manageAsset', 'nama_aset')
+                                    ->options(
+                                        ManageAsset::whereNotIn('status', ['Dipakai', 'Rusak', 'Maintenance'])
+                                            ->pluck('nama_aset', 'id')
+                                            ->toArray()
+                                    ),
+                                Forms\Components\DatePicker::make('assigned_at')
+                                    ->required(),
+
+                            ]),
+                    ]),
+
+                Forms\Components\Group::make()
+                    ->schema([
+                        Forms\Components\Section::make()
+                            ->schema([
+                                Forms\Components\Textarea::make('keterangan')
+                                    ->columnSpanFull(),
+                                Forms\Components\Select::make('status')
+                                    ->options([
+                                        'Dipakai' => 'Dipakai',
+                                        'Dikembalikan' => 'Dikembalikan',
+                                    ])
+                                    ->required(),
+                                Forms\Components\DatePicker::make('returned_at'),
+                            ])
                     ])
-                    ->required(),
+
             ]);
     }
 
@@ -73,7 +87,12 @@ class AssetAssignmentResource extends Resource
                 Tables\Columns\TextColumn::make('returned_at')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('status'),
+                Tables\Columns\TextColumn::make('status')
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'Dipakai' => 'success',
+                        'Dikembalikan' => 'warning',
+                    }),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

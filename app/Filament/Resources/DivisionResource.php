@@ -29,9 +29,17 @@ class DivisionResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('nama_divisi')
-                    ->required()
-                    ->maxLength(255),
+                Forms\Components\Group::make()
+                    ->schema([
+                        Forms\Components\Section::make()
+                            ->schema([
+                                Forms\Components\TextInput::make('nama_divisi')
+                                    ->required()
+                                    ->maxLength(255),
+                            ])
+
+
+                    ])
             ]);
     }
 
