@@ -29,9 +29,17 @@ class PositionResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('nama_jabatan')
-                    ->required()
-                    ->maxLength(255),
+                Forms\Components\Group::make()
+                    ->schema([
+                        Forms\Components\Section::make()
+                            ->schema([
+                                Forms\Components\TextInput::make('nama_jabatan')
+                                    ->required()
+                                    ->maxLength(255),
+                            ])
+
+
+                    ])
             ]);
     }
 

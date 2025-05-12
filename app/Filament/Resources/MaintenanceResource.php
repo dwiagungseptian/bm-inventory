@@ -33,51 +33,66 @@ class MaintenanceResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('asset_assignment_id')
-                    ->label('Aset yang Dipinjam')
-                    ->options(function () {
-                        return \App\Models\AssetAssignment::with(['manageAsset', 'user'])
-                            ->where('user_id', auth()->id())
-                            ->whereNull('returned_at')
-                            ->get()
-                            ->mapWithKeys(function ($assignment) {
-                                return [
-                                    $assignment->id => optional($assignment->manageAsset)->nama_aset . ' - ' . optional($assignment->user)->name,
-                                ];
-                            });
-                    })
-                    ->getOptionLabelUsing(function ($value): ?string {
-                        $assignment = \App\Models\AssetAssignment::with(['manageAsset', 'user'])->find($value);
-                        return $assignment
-                            ? optional($assignment->manageAsset)->nama_aset . ' - ' . optional($assignment->user)->name
-                            : null;
-                    })
-                    ->required()
-                    ->searchable(),
-                Forms\Components\Textarea::make('keterangan')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\Select::make('status')
-                    ->label('Status')
-                    ->options([
-                        'Diajukan' => 'Diajukan',
-                        'Approve' => 'Disetujui',
-                        'Ditolak' => 'Ditolak',
+                Forms\Components\Group::make()
+                    ->schema([
+                        Forms\Components\Section::make()
+                            ->schema([
+                                Forms\Components\Select::make('asset_assignment_id')
+                                    ->label('Aset yang Dipinjam')
+                                    ->options(function () {
+                                        return \App\Models\AssetAssignment::with(['manageAsset', 'user'])
+                                            ->where('user_id', auth()->id())
+                                            ->whereNull('returned_at')
+                                            ->get()
+                                            ->mapWithKeys(function ($assignment) {
+                                                return [
+                                                    $assignment->id => optional($assignment->manageAsset)->nama_aset . ' - ' . optional($assignment->user)->name,
+                                                ];
+                                            });
+                                    })
+                                    ->getOptionLabelUsing(function ($value): ?string {
+                                        $assignment = \App\Models\AssetAssignment::with(['manageAsset', 'user'])->find($value);
+                                        return $assignment
+                                            ? optional($assignment->manageAsset)->nama_aset . ' - ' . optional($assignment->user)->name
+                                            : null;
+                                    })
+                                    ->required()
+                                    ->searchable(),
+                                    Forms\Components\Textarea::make('keterangan')
+                                    ->required()
+                                    ->maxLength(255),
+                            ]),
+                    ]),
+
+                Forms\Components\Group::make()
+                    ->schema([
+                        Forms\Components\Section::make()
+                            ->schema([
+                               
+                                Forms\Components\Select::make('status')
+                                    ->label('Status')
+                                    ->options([
+                                        'Diajukan' => 'Diajukan',
+                                        'Approve' => 'Disetujui',
+                                        'Ditolak' => 'Ditolak',
+                                    ])
+                                    ->default('Diajukan')
+                                    ->required()
+                                    ->visible(fn() => auth()->user()->hasRole('Infrastruktur'))
+                                    ->dehydrated(fn() => auth()->user()->hasRole('Infrastruktur'))
+                                    ->live(),
+
+
+                                Forms\Components\FileUpload::make('lampiran')
+                                    ->required(),
+
+                                Forms\Components\Textarea::make('alasan_ditolak')
+                                    ->label('Alasan Ditolak')
+                                    ->visible(fn(Forms\Get $get) => auth()->user()->hasRole('Infrastruktur') && $get('status') === 'Ditolak')
+                                    ->requiredIf('status', 'Ditolak'),
+                            ])
                     ])
-                    ->default('Diajukan')
-                    ->required()
-                    ->visible(fn() => auth()->user()->hasRole('Infrastruktur'))
-                    ->dehydrated(fn() => auth()->user()->hasRole('Infrastruktur'))
-                    ->live(),
 
-
-                Forms\Components\FileUpload::make('lampiran')
-                    ->required(),
-
-                Forms\Components\Textarea::make('alasan_ditolak')
-                    ->label('Alasan Ditolak')
-                    ->visible(fn(Forms\Get $get) => auth()->user()->hasRole('Infrastruktur') && $get('status') === 'Ditolak')
-                    ->requiredIf('status', 'Ditolak'),
             ]);
     }
 
