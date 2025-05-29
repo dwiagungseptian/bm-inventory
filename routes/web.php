@@ -26,3 +26,4 @@ Route::get('/', function () {
 Route::get('pegawai/export', function () {
     return Excel::download(new PegawaiExport, 'pegawai.xlsx');
 })->name('pegawai-export');
+
