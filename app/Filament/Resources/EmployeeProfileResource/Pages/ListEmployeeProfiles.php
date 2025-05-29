@@ -15,7 +15,8 @@ class ListEmployeeProfiles extends ListRecords
     protected function getHeaderActions(): array
     {
         $actions = [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+            ->label('Tambah Pegawai'),
         ];
     
         if (Auth::user()->hasAnyRole('Infrastruktur', 'super_admin')) {
