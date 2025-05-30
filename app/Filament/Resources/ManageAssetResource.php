@@ -36,7 +36,11 @@ class ManageAssetResource extends Resource
                                 Forms\Components\TextInput::make('nama_aset')
                                     ->required(),
                                 Forms\Components\TextInput::make('kode_aset')
-                                    ->required(),
+                                    ->readOnly()
+                                    ->default(function () {
+                                        $lastId = \App\Models\ManageAsset::count() + 1;
+                                        return 'BM' . str_pad($lastId, 2, '0', STR_PAD_LEFT);
+                                    }),
                                 Forms\Components\Select::make('status')
                                     ->options([
                                         'Tersedia' => 'Tersedia',

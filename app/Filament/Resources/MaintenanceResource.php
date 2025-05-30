@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\MaintenanceResource\Pages;
 use App\Filament\Resources\MaintenanceResource\RelationManagers;
 use App\Models\Maintenance;
+use Closure;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -20,7 +21,7 @@ class MaintenanceResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-cog';
     public static function getNavigationBadge(): ?string
     {
-        if (auth()->check() && auth()->user()->hasAnyRole('Infrastruktur', 'super_admin')) {
+        if (auth()->check() && auth()->user()->hasAnyRole('Infrastruktur', 'super_admin', 'Manager Finance', 'Direktur Kapital')) {
             return static::getModel()::count();
         }
 
@@ -58,7 +59,7 @@ class MaintenanceResource extends Resource
                                     })
                                     ->required()
                                     ->searchable(),
-                                    Forms\Components\Textarea::make('keterangan')
+                                Forms\Components\Textarea::make('keterangan')
                                     ->required()
                                     ->maxLength(255),
                             ]),
@@ -68,18 +69,60 @@ class MaintenanceResource extends Resource
                     ->schema([
                         Forms\Components\Section::make()
                             ->schema([
-                               
+
                                 Forms\Components\Select::make('status')
                                     ->label('Status')
-                                    ->options([
-                                        'Diajukan' => 'Diajukan',
-                                        'Approve' => 'Disetujui',
-                                        'Ditolak' => 'Ditolak',
-                                    ])
-                                    ->default('Diajukan')
+                                    ->options(function ($get, $livewire) {
+                                        $role = auth()->user()->getRoleNames()->first();
+                                        $currentStatus = $livewire->record->status ?? $get('status');
+
+                                        $options = [];
+
+                                        if ($role === 'Karyawan' && str_starts_with($currentStatus, 'Ditolak')) {
+                                            $options = [
+                                                'Diajukan' => 'Diajukan',
+                                            ];
+                                        }
+
+                                        if ($role === 'Infrastruktur' && $currentStatus === 'Diajukan') {
+                                            $options = [
+                                                'Disetujui Infra' => 'Disetujui Infra',
+                                                'Ditolak Infra' => 'Ditolak Infra',
+                                            ];
+                                        }
+
+                                        if ($role === 'Manager Finance' && $currentStatus === 'Disetujui Infra') {
+                                            $options = [
+                                                'Disetujui Finance' => 'Disetujui Finance',
+                                                'Ditolak Finance' => 'Ditolak Finance',
+                                            ];
+                                        }
+
+                                        if ($role === 'Direktur Kapital' && $currentStatus === 'Disetujui Finance') {
+                                            $options = [
+                                                'Disetujui Direktur' => 'Disetujui Direktur',
+                                                'Ditolak Direktur' => 'Ditolak Direktur',
+                                            ];
+                                        }
+
+                                        return $options;
+                                    })
+                                    ->default(fn($get, $livewire) => $livewire->record->status ?? $get('status'))
                                     ->required()
-                                    ->visible(fn() => auth()->user()->hasRole('Infrastruktur'))
-                                    ->dehydrated(fn() => auth()->user()->hasRole('Infrastruktur'))
+                                    ->visible(fn() => auth()->user()->hasAnyRole(['Karyawan', 'Infrastruktur', 'Manager Finance', 'Direktur Kapital']))
+                                    ->dehydrated(fn() => auth()->user()->hasAnyRole(['Karyawan', 'Infrastruktur', 'Manager Finance', 'Direktur Kapital']))
+                                    ->disabled(function ($get, $livewire) {
+                                        $role = auth()->user()->getRoleNames()->first();
+                                        $currentStatus = $livewire->record->status ?? $get('status');
+
+                                        return match ($role) {
+                                            'Karyawan' => !str_starts_with($currentStatus, 'Ditolak'),
+                                            'Infrastruktur' => $currentStatus !== 'Diajukan',
+                                            'Manager Finance' => $currentStatus !== 'Disetujui Infra',
+                                            'Direktur Kapital' => $currentStatus !== 'Disetujui Finance',
+                                            default => true,
+                                        };
+                                    })
                                     ->live(),
 
 
@@ -88,9 +131,14 @@ class MaintenanceResource extends Resource
 
                                 Forms\Components\Textarea::make('alasan_ditolak')
                                     ->label('Alasan Ditolak')
-                                    ->visible(fn(Forms\Get $get) => auth()->user()->hasRole('Infrastruktur') && $get('status') === 'Ditolak')
-                                    ->requiredIf('status', 'Ditolak'),
-                            ])
+                                    ->visible(fn(Forms\Get $get) => str_starts_with($get('status') ?? '', 'Ditolak'))
+                                    ->disabled(fn() => auth()->user()->hasRole('Karyawan')) // hanya karyawan yang tidak bisa edit
+                                    ->required(
+                                        fn(Forms\Get $get) =>
+                                        auth()->user()->hasAnyRole(['Infrastruktur', 'Manager Finance', 'Direktur Kapital']) &&
+                                            str_starts_with($get('status') ?? '', 'Ditolak')
+                                    )
+                            ]),
                     ])
 
             ]);
@@ -100,7 +148,7 @@ class MaintenanceResource extends Resource
     {
         return $table
             ->modifyQueryUsing(function (Builder $query) {
-                $is_super_admin = auth()->user()->hasAnyRole(['super_admin', 'Infrastruktur']);
+                $is_super_admin = auth()->user()->hasAnyRole(['super_admin', 'Infrastruktur', 'Manager Finance', 'Direktur Kapital']);
                 if (! $is_super_admin) {
                     $query->whereHas('assetAssignment', function ($q) {
                         $q->where('user_id', auth()->id());
@@ -120,8 +168,13 @@ class MaintenanceResource extends Resource
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
                         'Diajukan' => 'warning',
-                        'Approve' => 'success',
-                        'Ditolak' => 'danger',
+                        'Disetujui Infra' => 'info',
+                        'Disetujui Finance' => 'info',
+                        'Disetujui Direktur' => 'success',
+
+                        'Ditolak Infra',
+                        'Ditolak Finance',
+                        'Ditolak Direktur' => 'danger',
                     }),
                 Tables\Columns\ImageColumn::make('lampiran')
                     ->searchable(),
