@@ -24,6 +24,14 @@ class ManageAssetResource extends Resource
     {
         return 'Manajemen Aset';
     }
+     public static function getNavigationBadge(): ?string
+    {
+        if (auth()->check() && auth()->user()->hasAnyRole('Infrastruktur', 'super_admin', 'Manager Finance', 'Direktur Kapital')) {
+            return static::getModel()::count();
+        }
+
+        return null;
+    }
 
     public static function form(Form $form): Form
     {
@@ -85,7 +93,7 @@ class ManageAssetResource extends Resource
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
                         'Tersedia' => 'success',
-                        'Rusak' => 'dangers',
+                        'Rusak' => 'danger',
                         'Dalam Perbaikan' => 'warning',
                         'Dipakai' => 'info',
                     }),
