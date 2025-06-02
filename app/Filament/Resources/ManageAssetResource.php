@@ -24,10 +24,10 @@ class ManageAssetResource extends Resource
     {
         return 'Manajemen Aset';
     }
-     public static function getNavigationBadge(): ?string
+    public static function getNavigationBadge(): ?string
     {
         if (auth()->check() && auth()->user()->hasAnyRole('Infrastruktur', 'super_admin', 'Manager Finance', 'Direktur Kapital')) {
-            return static::getModel()::count();
+            return static::getModel()::sum('jumlah_barang');
         }
 
         return null;
@@ -49,6 +49,17 @@ class ManageAssetResource extends Resource
                                         $lastId = \App\Models\ManageAsset::count() + 1;
                                         return 'BM' . str_pad($lastId, 2, '0', STR_PAD_LEFT);
                                     }),
+                                Forms\Components\TextInput::make('stok_barang')
+                                    ->label('Stock Tersedia')
+                                    ->numeric()
+                                    ->disabled()
+                                    ->required()
+                                    ->minValue(1),
+                                Forms\Components\TextInput::make('jumlah_barang')
+                                    ->label('Jumlah Barang')
+                                    ->required()
+                                    ->numeric()
+                                    ->minValue(1),
                                 Forms\Components\Select::make('status')
                                     ->options([
                                         'Tersedia' => 'Tersedia',
@@ -56,6 +67,7 @@ class ManageAssetResource extends Resource
                                         'Dalam Perbaikan' => 'Dalam Perbaikan',
                                         'Dipakai' => 'Dipakai',
                                     ])
+                                    ->disabled()
                                     ->required(),
 
                             ]),
@@ -87,6 +99,12 @@ class ManageAssetResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('kode_aset')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('jumlah_barang')
+                    ->label('Jumlah Barang')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('stok_barang')
+                    ->label('Stok Barang Tersedia')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('keterangan')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('status')

@@ -15,6 +15,8 @@ class ManageAsset extends Model
         'keterangan',
         'status',
         'gambar',
+        'stok_barang',
+        'jumlah_barang',
         'tanggal_pembelian',
     ];
 

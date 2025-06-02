@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\AssetAssignmentResource\Pages;
-use App\Filament\Resources\AssetAssignmentResource\RelationManagers;
 use App\Models\AssetAssignment;
 use App\Models\ManageAsset;
 use Filament\Forms;
@@ -12,7 +11,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 
 class AssetAssignmentResource extends Resource
@@ -34,17 +32,18 @@ class AssetAssignmentResource extends Resource
                                 Forms\Components\Select::make('user_id')
                                     ->relationship('user', 'name')
                                     ->required(),
+
                                 Forms\Components\Select::make('assets_id')
                                     ->required()
                                     ->relationship('manageAsset', 'nama_aset')
                                     ->options(
-                                        ManageAsset::whereNotIn('status', ['Dipakai', 'Rusak', 'Maintenance'])
+                                        ManageAsset::where('stok_barang', '>', 0)
                                             ->pluck('nama_aset', 'id')
                                             ->toArray()
                                     ),
+
                                 Forms\Components\DatePicker::make('assigned_at')
                                     ->required(),
-
                             ]),
                     ]),
 
@@ -54,16 +53,18 @@ class AssetAssignmentResource extends Resource
                             ->schema([
                                 Forms\Components\Textarea::make('keterangan')
                                     ->columnSpanFull(),
+
                                 Forms\Components\Select::make('status')
                                     ->options([
                                         'Dipakai' => 'Dipakai',
                                         'Dikembalikan' => 'Dikembalikan',
                                     ])
+                                    ->default('Dipakai')
                                     ->required(),
-                                Forms\Components\DatePicker::make('returned_at'),
-                            ])
-                    ])
 
+                                Forms\Components\DatePicker::make('returned_at'),
+                            ]),
+                    ]),
             ]);
     }
 
@@ -71,32 +72,37 @@ class AssetAssignmentResource extends Resource
     {
         return $table
             ->modifyQueryUsing(function (Builder $query) {
-                $is_super_admin = Auth()->user()->hasAnyRole('super_admin', 'Infrastruktur');
-                if (!$is_super_admin) {
-                    $query->where('user_id', auth()->user()->id);
+                if (!Auth::user()->hasAnyRole('super_admin', 'Infrastruktur')) {
+                    $query->where('user_id', auth()->id());
                 }
             })
             ->columns([
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Nama Pegawai'),
+
                 Tables\Columns\TextColumn::make('manageAsset.nama_aset')
                     ->label('Nama Aset'),
+
                 Tables\Columns\TextColumn::make('assigned_at')
                     ->date()
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('returned_at')
                     ->date()
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
                         'Dipakai' => 'success',
                         'Dikembalikan' => 'warning',
                     }),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
@@ -115,11 +121,20 @@ class AssetAssignmentResource extends Resource
             ]);
     }
 
+    public static function afterCreate(Form $form, $record): void
+    {
+        if ($record->status === 'Dipakai') {
+            $asset = ManageAsset::find($record->assets_id);
+            if ($asset && $asset->stok_barang > 0) {
+                $asset->decrement('stok_barang');
+                $asset->save();
+            }
+        }
+    }
+
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
