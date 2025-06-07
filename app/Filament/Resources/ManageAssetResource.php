@@ -77,7 +77,7 @@ class ManageAssetResource extends Resource
 
                         Forms\Components\Section::make()
                             ->schema([
-                                Forms\Components\TextArea::make('keterangan')
+                                Forms\Components\Textarea::make('keterangan')
                                     ->required()
                                     ->maxLength(255),
                                 Forms\Components\FileUpload::make('gambar')

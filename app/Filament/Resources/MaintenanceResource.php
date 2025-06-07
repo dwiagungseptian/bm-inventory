@@ -108,7 +108,7 @@ class MaintenanceResource extends Resource
                                         return $options;
                                     })
                                     ->default(fn($get, $livewire) => $livewire->record->status ?? $get('status'))
-                                    ->required()
+
                                     ->visible(fn() => auth()->user()->hasAnyRole(['Karyawan', 'Infrastruktur', 'Manager Finance', 'Direktur Kapital']))
                                     ->dehydrated(fn() => auth()->user()->hasAnyRole(['Karyawan', 'Infrastruktur', 'Manager Finance', 'Direktur Kapital']))
                                     ->disabled(function ($get, $livewire) {
