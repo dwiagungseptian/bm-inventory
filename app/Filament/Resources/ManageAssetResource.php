@@ -53,7 +53,7 @@ class ManageAssetResource extends Resource
                                     ->label('Stock Tersedia')
                                     ->numeric()
                                     ->disabled()
-                                    ->required()
+
                                     ->minValue(1),
                                 Forms\Components\TextInput::make('jumlah_barang')
                                     ->label('Jumlah Barang')
@@ -67,8 +67,8 @@ class ManageAssetResource extends Resource
                                         'Dalam Perbaikan' => 'Dalam Perbaikan',
                                         'Dipakai' => 'Dipakai',
                                     ])
-                                    ->disabled()
-                                    ->required(),
+                                    ->disabled(),
+
 
                             ]),
                     ]),
